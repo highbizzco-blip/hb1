@@ -252,7 +252,7 @@ export default function AIPlannerSection() {
               {industries.map((ind) => (
                 <button
                   key={ind}
-                  onClick={() => { setIndustry(ind); setShowPreview(false); }}
+                  onClick={() => { setIndustry(ind); /* preview removed */; }}
                   className={`px-4 py-2 text-sm rounded-xl border transition-all ${
                     industry === ind
                       ? "border-primary bg-primary/5 text-primary font-medium"
@@ -271,7 +271,7 @@ export default function AIPlannerSection() {
               {budgets.map((b) => (
                 <button
                   key={b}
-                  onClick={() => { setBudget(b); setShowPreview(false); }}
+                  onClick={() => { setBudget(b); /* preview removed */; }}
                   className={`px-4 py-2 text-sm rounded-xl border transition-all ${
                     budget === b
                       ? "border-primary bg-primary/5 text-primary font-medium"
@@ -304,7 +304,8 @@ export default function AIPlannerSection() {
           </div>
 
           <button
-            onClick={handleGenerateClick}
+            type="button"
+            onClick={(e) => { e.preventDefault(); handleGenerateClick(); }}
             disabled={!canGenerate || loading}
             className={`w-full py-3.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
               canGenerate && !loading
