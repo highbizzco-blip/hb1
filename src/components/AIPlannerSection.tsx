@@ -1,23 +1,64 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Sparkles, Lock, ArrowRight } from "lucide-react";
+import { Sparkles, Lock, ArrowRight, Loader, AlertCircle, CheckCircle2 } from "lucide-react";
 
 const industries = ["E-commerce", "SaaS", "Healthcare", "Real Estate", "Education", "Finance", "D2C Brands", "Other"];
 const budgets = ["₹50K – ₹2L/mo", "₹2L – ₹5L/mo", "₹5L – ₹15L/mo", "₹15L+/mo"];
 const goals = ["Lead Generation", "Sales & Revenue", "Brand Awareness", "App Downloads", "Website Traffic"];
 
+interface GrowthPlan {
+  summary: string;
+  channelRecommendations: { channel: string; budgetAllocation: string; rationale: string }[];
+  roadmap: {
+    phase1: { duration: string; focus: string; deliverables: string[] };
+    phase2: { duration: string; focus: string; deliverables: string[] };
+    phase3: { duration: string; focus: string; deliverables: string[] };
+  };
+  expectedKPIs: { [key: string]: { metric: string; target: string } };
+  tools: string[];
+  riskMitigation: string[];
+}
+
 export default function AIPlannerSection() {
   const [industry, setIndustry] = useState("");
   const [budget, setBudget] = useState("");
   const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
-  const [showPreview, setShowPreview] = useState(false);
+  const [plan, setPlan] = useState<GrowthPlan | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const toggleGoal = (g: string) => {
-    setShowPreview(false);
+    setPlan(null);
+    setError(null);
     setSelectedGoals((prev) => (prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g]));
   };
 
   const canGenerate = industry && budget && selectedGoals.length > 0;
+
+  const generatePlan = async () => {
+    setLoading(true);
+    setError(null);
+    setPlan(null);
+
+    try {
+      const response = await fetch("http://localhost:3001/api/generate-growth-plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ industry, budget, goals: selectedGoals }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate plan");
+      }
+
+      const data = await response.json();
+      setPlan(data.plan);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to generate plan. Make sure the API server is running.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <section id="ai-planner" className="py-24 relative" style={{ background: "hsl(var(--surface-sunken))" }}>
@@ -103,38 +144,140 @@ export default function AIPlannerSection() {
           </div>
 
           <button
-            onClick={() => canGenerate && setShowPreview(true)}
-            disabled={!canGenerate}
+            onClick={generatePlan}
+            disabled={!canGenerate || loading}
             className={`w-full py-3.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
-              canGenerate
+              canGenerate && !loading
                 ? "btn-primary"
                 : "bg-muted text-muted-foreground cursor-not-allowed"
             }`}
           >
-            <Sparkles className="w-4 h-4" />
-            Generate My Growth Plan
+            {loading ? (
+              <>
+                <Loader className="w-4 h-4 animate-spin" />
+                Generating Your Plan...
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4" />
+                Generate My Growth Plan
+              </>
+            )}
           </button>
 
-          {showPreview && (
+          {error && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
-              className="mt-8 relative"
+              className="mt-6 p-4 rounded-xl bg-destructive/10 border border-destructive/20 flex gap-3"
             >
-              <div className="blur-sm pointer-events-none select-none space-y-3">
-                {["Recommended Channels & Budget Split", "30-60-90 Day Execution Roadmap", "Expected KPIs & Revenue Forecast"].map((title) => (
-                  <div key={title} className="p-4 rounded-xl bg-muted">
-                    <h4 className="text-sm font-semibold text-foreground mb-1">{title}</h4>
-                    <p className="text-xs text-muted-foreground">Based on your industry and budget, we recommend a multi-channel approach focusing on...</p>
-                  </div>
-                ))}
+              <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-foreground">Error</p>
+                <p className="text-xs text-muted-foreground mt-1">{error}</p>
               </div>
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-card/80 backdrop-blur-sm rounded-xl">
-                <Lock className="w-5 h-5 text-primary mb-3" />
-                <p className="text-sm font-semibold text-foreground mb-1">Your Growth Plan is Ready</p>
-                <p className="text-xs text-muted-foreground mb-4">Book a free call to unlock your complete roadmap with our strategist</p>
-                <a href="/contact" className="btn-primary text-sm px-5 py-2.5">
-                  Unlock Full Plan <ArrowRight className="w-3.5 h-3.5" />
+            </motion.div>
+          )}
+
+          {plan && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-8 space-y-6"
+            >
+              {/* Summary */}
+              <div className="p-6 rounded-xl bg-primary/5 border border-primary/20">
+                <div className="flex gap-3 mb-3">
+                  <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <h3 className="text-lg font-semibold text-foreground">Your Growth Strategy</h3>
+                </div>
+                <p className="text-muted-foreground">{plan.summary}</p>
+              </div>
+
+              {/* Channel Recommendations */}
+              <div>
+                <h3 className="text-sm font-semibold text-foreground mb-4">Recommended Channels & Budget Split</h3>
+                <div className="space-y-3">
+                  {plan.channelRecommendations.map((rec) => (
+                    <div key={rec.channel} className="p-4 rounded-xl bg-card border border-border">
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="font-semibold text-foreground">{rec.channel}</h4>
+                        <span className="text-sm font-bold text-primary">{rec.budgetAllocation}</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{rec.rationale}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 30-60-90 Roadmap */}
+              <div>
+                <h3 className="text-sm font-semibold text-foreground mb-4">30-60-90 Day Execution Roadmap</h3>
+                <div className="grid md:grid-cols-3 gap-4">
+                  {[
+                    { name: "Phase 1", data: plan.roadmap.phase1 },
+                    { name: "Phase 2", data: plan.roadmap.phase2 },
+                    { name: "Phase 3", data: plan.roadmap.phase3 },
+                  ].map((phase) => (
+                    <div key={phase.name} className="p-4 rounded-xl bg-card border border-border">
+                      <p className="text-xs font-semibold text-primary mb-2">{phase.data.duration}</p>
+                      <h4 className="font-semibold text-foreground mb-3">{phase.data.focus}</h4>
+                      <ul className="space-y-2">
+                        {phase.data.deliverables.map((item) => (
+                          <li key={item} className="text-sm text-muted-foreground flex gap-2">
+                            <span className="text-primary">•</span> {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Expected KPIs */}
+              <div>
+                <h3 className="text-sm font-semibold text-foreground mb-4">Expected KPIs & Revenue Forecast</h3>
+                <div className="grid md:grid-cols-3 gap-4">
+                  {Object.entries(plan.expectedKPIs).map(([key, value]) => (
+                    <div key={key} className="p-4 rounded-xl bg-card border border-border">
+                      <p className="text-xs font-semibold text-primary mb-2">{key.replace("month", "Month ")}</p>
+                      <p className="text-sm text-muted-foreground mb-2">{value.metric}</p>
+                      <p className="text-2xl font-bold text-foreground">{value.target}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tools & Risk Mitigation */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="p-4 rounded-xl bg-card border border-border">
+                  <h4 className="font-semibold text-foreground mb-3">Recommended Tools</h4>
+                  <ul className="space-y-2">
+                    {plan.tools.map((tool) => (
+                      <li key={tool} className="text-sm text-muted-foreground flex gap-2">
+                        <span className="text-primary">→</span> {tool}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="p-4 rounded-xl bg-card border border-border">
+                  <h4 className="font-semibold text-foreground mb-3">Risk Mitigation</h4>
+                  <ul className="space-y-2">
+                    {plan.riskMitigation.map((risk) => (
+                      <li key={risk} className="text-sm text-muted-foreground flex gap-2">
+                        <span className="text-primary">✓</span> {risk}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-xl bg-muted/50 border border-border">
+                <p className="text-sm text-muted-foreground">
+                  <strong>Next Step:</strong> Book a free strategy call with our team to refine this plan and discuss implementation details.
+                </p>
+                <a href="/contact" className="btn-primary text-sm px-5 py-2.5 mt-3 inline-flex items-center gap-2">
+                  Schedule Free Call <ArrowRight className="w-3.5 h-3.5" />
                 </a>
               </div>
             </motion.div>

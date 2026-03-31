@@ -32,9 +32,31 @@ cd <YOUR_PROJECT_NAME>
 # Step 3: Install the necessary dependencies.
 npm i
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Step 4: Set up environment variables (for AI Planner feature)
+cp .env.example .env
+# Then edit .env and add your ANTHROPIC_API_KEY
+
+# Step 5: Start the API server (in one terminal)
+npm run api
+
+# Step 6: Start the development server (in another terminal)
 npm run dev
 ```
+
+## AI Growth Planner Setup
+
+The AI Planner feature generates customized growth strategies using Claude AI. To enable it:
+
+1. **Get an Anthropic API Key**: Visit [console.anthropic.com](https://console.anthropic.com)
+2. **Create `.env` file**:
+   ```
+   ANTHROPIC_API_KEY=your_key_here
+   PORT=3001
+   ```
+3. **Run the API server**: `npm run api`
+4. **Run the dev server**: `npm run dev`
+
+The planner will be available at `http://localhost:8080` under the "AI Growth Planner" section.
 
 **Edit a file directly in GitHub**
 
