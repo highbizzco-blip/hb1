@@ -1,10 +1,16 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Sparkles, Lock, ArrowRight, Loader, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Sparkles, ArrowRight, Loader, AlertCircle, CheckCircle2, Download, Mail, Phone, User } from "lucide-react";
 
 const industries = ["E-commerce", "SaaS", "Healthcare", "Real Estate", "Education", "Finance", "D2C Brands", "Other"];
 const budgets = ["₹50K – ₹2L/mo", "₹2L – ₹5L/mo", "₹5L – ₹15L/mo", "₹15L+/mo"];
 const goals = ["Lead Generation", "Sales & Revenue", "Brand Awareness", "App Downloads", "Website Traffic"];
+
+interface LeadData {
+  name: string;
+  email: string;
+  phone: string;
+}
 
 interface GrowthPlan {
   summary: string;
@@ -17,6 +23,9 @@ interface GrowthPlan {
   expectedKPIs: { [key: string]: { metric: string; target: string } };
   tools: string[];
   riskMitigation: string[];
+  costEstimate?: string;
+  timeline?: string;
+  successMetrics?: string[];
 }
 
 export default function AIPlannerSection() {
@@ -26,6 +35,9 @@ export default function AIPlannerSection() {
   const [plan, setPlan] = useState<GrowthPlan | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showLeadForm, setShowLeadForm] = useState(false);
+  const [leadData, setLeadData] = useState<LeadData>({ name: "", email: "", phone: "" });
+  const [leadErrors, setLeadErrors] = useState<{ [key: string]: string }>({});
 
   const toggleGoal = (g: string) => {
     setPlan(null);
@@ -34,6 +46,40 @@ export default function AIPlannerSection() {
   };
 
   const canGenerate = industry && budget && selectedGoals.length > 0;
+
+  const validateLead = () => {
+    const errors: { [key: string]: string } = {};
+    if (!leadData.name.trim()) errors.name = "Name is required";
+    if (!leadData.email.includes("@")) errors.email = "Valid email is required";
+    if (!leadData.phone.trim()) errors.phone = "Phone is required";
+    setLeadErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const downloadPlan = () => {
+    if (!plan) return;
+    const content = JSON.stringify(
+      {
+        generatedAt: new Date().toLocaleString(),
+        leadInfo: leadData,
+        businessInfo: { industry, budget, goals: selectedGoals },
+        plan,
+      },
+      null,
+      2
+    );
+    const blob = new Blob([content], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `growth-plan-${leadData.name.replace(/\s+/g, "-")}-${Date.now()}.json`;
+    a.click();
+  };
+
+  const handleGenerateClick = () => {
+    if (!validateLead()) return;
+    generatePlan();
+  };
 
   const generatePlan = async () => {
     setLoading(true);
@@ -44,7 +90,12 @@ export default function AIPlannerSection() {
       const response = await fetch("http://localhost:3001/api/generate-growth-plan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ industry, budget, goals: selectedGoals }),
+        body: JSON.stringify({
+          industry,
+          budget,
+          goals: selectedGoals,
+          leadData,
+        }),
       });
 
       if (!response.ok) {
@@ -53,6 +104,7 @@ export default function AIPlannerSection() {
 
       const data = await response.json();
       setPlan(data.plan);
+      setShowLeadForm(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to generate plan. Make sure the API server is running.");
     } finally {
@@ -86,6 +138,74 @@ export default function AIPlannerSection() {
           viewport={{ once: true }}
           className="max-w-3xl mx-auto bg-card rounded-2xl border border-border shadow-sm p-8"
         >
+          {/* Lead Form */}
+          {!plan && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              className="mb-8 p-6 rounded-xl bg-primary/5 border border-primary/20"
+            >
+              <h3 className="text-lg font-semibold text-foreground mb-4">Let's Get Started 🚀</h3>
+              <div className="grid md:grid-cols-3 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2 flex gap-2">
+                    <User className="w-4 h-4" /> Your Name
+                  </label>
+                  <input
+                    type="text"
+                    value={leadData.name}
+                    onChange={(e) => {
+                      setLeadData({ ...leadData, name: e.target.value });
+                      if (leadErrors.name) setLeadErrors({ ...leadErrors, name: "" });
+                    }}
+                    placeholder="John Doe"
+                    className={`w-full px-4 py-2.5 rounded-lg border text-sm transition-all bg-background text-foreground ${
+                      leadErrors.name ? "border-destructive" : "border-border focus:border-primary"
+                    }`}
+                  />
+                  {leadErrors.name && <p className="text-xs text-destructive mt-1">{leadErrors.name}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2 flex gap-2">
+                    <Mail className="w-4 h-4" /> Email
+                  </label>
+                  <input
+                    type="email"
+                    value={leadData.email}
+                    onChange={(e) => {
+                      setLeadData({ ...leadData, email: e.target.value });
+                      if (leadErrors.email) setLeadErrors({ ...leadErrors, email: "" });
+                    }}
+                    placeholder="john@company.com"
+                    className={`w-full px-4 py-2.5 rounded-lg border text-sm transition-all bg-background text-foreground ${
+                      leadErrors.email ? "border-destructive" : "border-border focus:border-primary"
+                    }`}
+                  />
+                  {leadErrors.email && <p className="text-xs text-destructive mt-1">{leadErrors.email}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2 flex gap-2">
+                    <Phone className="w-4 h-4" /> Phone
+                  </label>
+                  <input
+                    type="tel"
+                    value={leadData.phone}
+                    onChange={(e) => {
+                      setLeadData({ ...leadData, phone: e.target.value });
+                      if (leadErrors.phone) setLeadErrors({ ...leadErrors, phone: "" });
+                    }}
+                    placeholder="+91 9999999999"
+                    className={`w-full px-4 py-2.5 rounded-lg border text-sm transition-all bg-background text-foreground ${
+                      leadErrors.phone ? "border-destructive" : "border-border focus:border-primary"
+                    }`}
+                  />
+                  {leadErrors.phone && <p className="text-xs text-destructive mt-1">{leadErrors.phone}</p>}
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">We'll use this to send you your personalized growth plan</p>
+            </motion.div>
+          )}
+
           <div className="mb-6">
             <label className="block text-sm font-medium text-foreground mb-3">Select Your Industry</label>
             <div className="flex flex-wrap gap-2">
@@ -144,7 +264,7 @@ export default function AIPlannerSection() {
           </div>
 
           <button
-            onClick={generatePlan}
+            onClick={handleGenerateClick}
             disabled={!canGenerate || loading}
             className={`w-full py-3.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
               canGenerate && !loading
@@ -272,13 +392,26 @@ export default function AIPlannerSection() {
                 </div>
               </div>
 
-              <div className="p-4 rounded-xl bg-muted/50 border border-border">
-                <p className="text-sm text-muted-foreground">
-                  <strong>Next Step:</strong> Book a free strategy call with our team to refine this plan and discuss implementation details.
-                </p>
-                <a href="/contact" className="btn-primary text-sm px-5 py-2.5 mt-3 inline-flex items-center gap-2">
-                  Schedule Free Call <ArrowRight className="w-3.5 h-3.5" />
-                </a>
+              <div className="grid md:grid-cols-2 gap-4 p-4 rounded-xl bg-muted/50 border border-border">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    <strong>Next Step:</strong> Book a free strategy call with our team to refine this plan.
+                  </p>
+                  <a href="/contact" className="btn-primary text-sm px-5 py-2.5 inline-flex items-center gap-2">
+                    Schedule Free Call <ArrowRight className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    <strong>Save Your Plan:</strong> Download this strategy as a detailed document.
+                  </p>
+                  <button
+                    onClick={downloadPlan}
+                    className="btn-secondary text-sm px-5 py-2.5 inline-flex items-center gap-2 w-full md:w-auto"
+                  >
+                    <Download className="w-3.5 h-3.5" /> Download Plan
+                  </button>
+                </div>
               </div>
             </motion.div>
           )}
