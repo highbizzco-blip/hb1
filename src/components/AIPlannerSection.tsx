@@ -77,6 +77,7 @@ export default function AIPlannerSection() {
   };
 
   const handleGenerateClick = () => {
+    console.log("🎯 Button clicked! Generating plan...");
     generatePlan();
   };
 
