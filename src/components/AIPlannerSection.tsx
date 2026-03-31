@@ -87,7 +87,12 @@ export default function AIPlannerSection() {
     setPlan(null);
 
     try {
-      const response = await fetch("http://localhost:3001/api/generate-growth-plan", {
+      // Use relative path for Vercel, fallback to localhost for development
+      const apiUrl = typeof window !== 'undefined' && window.location.hostname === 'localhost'
+        ? 'http://localhost:3001/api/generate-growth-plan'
+        : '/api/generate-growth-plan';
+
+      const response = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
