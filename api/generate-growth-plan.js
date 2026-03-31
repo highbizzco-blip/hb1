@@ -1,31 +1,10 @@
-import Anthropic from '@anthropic-ai/sdk';
-import { promises as fs } from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const leadsFile = path.join(__dirname, '../.data/leads.json');
-
-// Ensure data directory exists
-async function ensureLeadsFile() {
-  try {
-    const dataDir = path.join(__dirname, '../.data');
-    await fs.mkdir(dataDir, { recursive: true });
-    try {
-      await fs.access(leadsFile);
-    } catch {
-      await fs.writeFile(leadsFile, JSON.stringify([]), 'utf-8');
-    }
-  } catch (error) {
-    console.error('Error ensuring leads file:', error);
-  }
-}
+const Anthropic = require('@anthropic-ai/sdk').default;
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -132,24 +111,16 @@ Generate ONLY valid JSON with this exact structure:
 
     const growthPlan = JSON.parse(jsonMatch[0]);
 
-    // Save lead data
+    // Log lead data (for now, stored in Vercel logs)
     if (leadData) {
-      await ensureLeadsFile();
-      try {
-        const leadsData = await fs.readFile(leadsFile, 'utf-8');
-        const leads = JSON.parse(leadsData);
-        leads.push({
-          ...leadData,
-          industry,
-          budget,
-          goals,
-          generatedAt: new Date().toISOString(),
-        });
-        await fs.writeFile(leadsFile, JSON.stringify(leads, null, 2), 'utf-8');
-      } catch (error) {
-        console.error('Error saving lead:', error);
-        // Don't fail the request if lead saving fails
-      }
+      console.log('Lead generated:', {
+        name: leadData.name,
+        email: leadData.email,
+        industry,
+        budget,
+        goals,
+        timestamp: new Date().toISOString(),
+      });
     }
 
     res.status(200).json({ success: true, plan: growthPlan });
