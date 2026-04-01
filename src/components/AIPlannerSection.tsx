@@ -302,7 +302,18 @@ export default function AIPlannerSection() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowContactModal(true)}
+                  onClick={() => {
+                    const name = prompt("Your Name?");
+                    if (name) {
+                      const email = prompt("Your Email?");
+                      if (email) {
+                        const phone = prompt("Your Phone?");
+                        if (phone) {
+                          alert(`Thank you ${name}! We'll contact you at ${email} soon.`);
+                        }
+                      }
+                    }
+                  }}
                   className="btn-primary text-sm px-4 py-2"
                 >
                   Book a Call
