@@ -312,17 +312,17 @@ export default function AIPlannerSection() {
           )}
         </motion.div>
 
-        {/* Contact Modal */}
+        {/* Contact Modal Popup */}
         {showContactModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-card rounded-2xl border border-border shadow-lg p-8 max-w-md w-full mx-4"
+              className="bg-card rounded-2xl border border-border shadow-lg p-8 max-w-md w-full"
             >
-              <h3 className="text-2xl font-bold text-foreground mb-4">Book Your Strategy Call</h3>
+              <h3 className="text-2xl font-bold text-foreground mb-2">📞 Schedule Your Call</h3>
               <p className="text-muted-foreground mb-6">
-                Let's discuss your growth plan with our strategist. Schedule a free 30-minute call.
+                Our strategist will help you implement this growth plan.
               </p>
 
               <div className="space-y-4 mb-6">
@@ -333,33 +333,33 @@ export default function AIPlannerSection() {
                 />
                 <input
                   type="email"
-                  placeholder="your@email.com"
+                  placeholder="Email"
                   className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground"
                 />
                 <input
                   type="tel"
-                  placeholder="+91 9999999999"
+                  placeholder="Phone"
                   className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground"
                 />
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => setShowContactModal(false)}
-                  className="flex-1 px-4 py-2 rounded-lg border border-border text-foreground hover:bg-muted transition-colors"
+                  className="flex-1 px-4 py-2 rounded-lg border border-border text-foreground hover:bg-muted"
                 >
                   Close
                 </button>
                 <button
                   type="button"
                   onClick={() => {
-                    alert('Thank you! Our team will contact you soon.');
                     setShowContactModal(false);
+                    alert('✅ We will contact you soon!');
                   }}
                   className="flex-1 btn-primary text-sm"
                 >
-                  Schedule Call
+                  Book Call
                 </button>
               </div>
             </motion.div>
