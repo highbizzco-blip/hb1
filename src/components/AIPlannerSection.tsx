@@ -63,6 +63,7 @@ export default function AIPlannerSection() {
   const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
   const [plan, setPlan] = useState<GrowthPlan | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
 
   const canGenerate = industry && budget && selectedGoals.length > 0;
 
@@ -295,14 +296,75 @@ export default function AIPlannerSection() {
                 <button
                   type="button"
                   onClick={downloadPlan}
-                  className="btn-secondary text-sm px-4 py-2"
+                  className="btn-secondary text-sm px-4 py-2 mr-2"
                 >
                   <Download className="w-3.5 h-3.5 inline mr-1" /> Download
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowContactModal(true)}
+                  className="btn-primary text-sm px-4 py-2"
+                >
+                  Book a Call
                 </button>
               </div>
             </motion.div>
           )}
         </motion.div>
+
+        {/* Contact Modal */}
+        {showContactModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-card rounded-2xl border border-border shadow-lg p-8 max-w-md w-full mx-4"
+            >
+              <h3 className="text-2xl font-bold text-foreground mb-4">Book Your Strategy Call</h3>
+              <p className="text-muted-foreground mb-6">
+                Let's discuss your growth plan with our strategist. Schedule a free 30-minute call.
+              </p>
+
+              <div className="space-y-4 mb-6">
+                <input
+                  type="text"
+                  placeholder="Your Name"
+                  className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground"
+                />
+                <input
+                  type="email"
+                  placeholder="your@email.com"
+                  className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground"
+                />
+                <input
+                  type="tel"
+                  placeholder="+91 9999999999"
+                  className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground"
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowContactModal(false)}
+                  className="flex-1 px-4 py-2 rounded-lg border border-border text-foreground hover:bg-muted transition-colors"
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    alert('Thank you! Our team will contact you soon.');
+                    setShowContactModal(false);
+                  }}
+                  className="flex-1 btn-primary text-sm"
+                >
+                  Schedule Call
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
       </div>
     </section>
   );
