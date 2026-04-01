@@ -103,7 +103,7 @@ export default function AIPlannerSection() {
             <Sparkles className="w-3.5 h-3.5" /> AI Growth Planner
           </div>
           <h2 className="text-3xl sm:text-4xl font-display font-bold text-foreground mb-4">
-            Get a Tailored Growth Strategy in 60 Seconds
+            Get Your Custom Growth Strategy in 60 Seconds ✨
           </h2>
           <p className="text-muted-foreground max-w-lg mx-auto">
             Tell us about your business. Our AI — trained on data from 200+ campaigns — will generate a custom growth roadmap.
